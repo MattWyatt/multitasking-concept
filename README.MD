@@ -4,12 +4,12 @@ this is a simple proof of concept multitasking library. my intent is to use this
 # example
 ```cpp
 /* create a process object with a function
-     * execution begins immediately */
-        process p([]() {
-for (int i = 0; i < 5; i++) {
-std::this_thread::sleep_for(std::chrono::seconds(1));
-std::cout << "hello, multitasking! " << i << std::endl;
-}
+ * execution begins immediately */
+process p([]() {
+	for (int i = 0; i < 5; i++) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::cout << "hello, multitasking! " << i << std::endl;
+	}
 });
 
 
