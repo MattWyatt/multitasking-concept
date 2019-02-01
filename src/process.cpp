@@ -4,18 +4,10 @@
 #include <cstring>
 #include "process.h"
 
-std::vector<std::thread> process::_readers;
-
-void process::exit_processes() {
-    for (std::thread &r : _readers) {
-        r.join();
-    }
-}
-
-process::process(const std::function<void()> &_function) : _function(_function) {}
-
-void process::execute() {
+process::process(const std::function<void()>& function) : _function(function) {
     int result = fork();
+    _pid = result;
+
     if (result == -1) {
         std::cerr << "error in fork!\nquitting!\n";
         return;
@@ -59,22 +51,33 @@ void process::execute() {
         close(_pipe.owrite());
 
         /* create the read thread and push it back */
-        _readers.emplace_back(std::thread([this]() {
+        _reader = std::thread([this]() {
             /* block and read every character from stdin individually
              * then push it back to the output buffer */
             char buffer;
             while (read(_pipe.oread(), &buffer, 1) > 0) {
-                _output += buffer;
+                _output << buffer;
             }
-        }));
+        });
     }
 }
 
-const std::string &process::output() const {
-    return _output;
+const std::string process::output() const {
+    return _output.str();
 }
 
 void process::write_to(const std::string &input) {
-    const char* send = std::string(input + "\n").c_str();
+    const char* send = std::string(input + "\n\r").c_str();
     write(_pipe.iwrite(), send, strlen(send));
+}
+
+const pid_t& process::get_pid() const {
+    return _pid;
+}
+
+
+void process::wait_for_exit() {
+    if (_reader.joinable()) {
+        _reader.join();
+    }
 }

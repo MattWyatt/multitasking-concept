@@ -4,29 +4,32 @@
 
 #include <vector>
 #include <thread>
+#include <sstream>
 #include <functional>
 #include "process_pipe.h"
 
 class process {
 private:
-    static std::vector<std::thread> _readers;
+    std::thread _reader;
 
     process_pipe _pipe;
 
-    std::string _output;
+    std::stringstream _output;
 
     std::function<void(void)> _function;
 
+    pid_t _pid;
+
 public:
-    static void exit_processes();
+    explicit process(const std::function<void()>& function);
 
-    process(const std::function<void()> &_function);
-
-    void execute();
-
-    const std::string &output() const;
+    const std::string output() const;
 
     void write_to(const std::string &input);
+
+    const pid_t& get_pid() const;
+
+    void wait_for_exit();
 
 };
 
